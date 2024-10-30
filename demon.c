@@ -1,8 +1,8 @@
 #include <gtk/gtk.h>
 #include <stdio.h>
+#include <unistd.h>
 
-
-static void createfire(){
+static bool createfire(){
   GtkWidget *picture = gtk_picture_new_for_filename("fire.png");
   gtk_picture_set_content_fit(GTK_PICTURE(picture), TRUE);
   gtk_widget_set_size_request(picture, 200, 200);
@@ -24,9 +24,10 @@ static void createfire(){
   gtk_fixed_move(GTK_FIXED(popup), picture, x, y);
   gtk_window_set_child(GTK_WINDOW(popup), picture);
   gtk_window_present(GTK_WINDOW(popup));
+  return true;
 }
 
-static void createdemon(GtkApplication *app){
+static bool createdemon(GtkApplication *app){
     GtkWidget *window = gtk_application_window_new(app);
     gtk_window_set_title(GTK_WINDOW(window), "Little Demon");
     gtk_window_set_default_size(GTK_WINDOW(window), 300, 300);
@@ -47,10 +48,15 @@ static void createdemon(GtkApplication *app){
 
     gtk_window_present(GTK_WINDOW(window));
 
+    // periodically make fires every 3 seconds
+    g_timeout_add_seconds(3, G_SOURCE_FUNC(createfire), NULL);
+    return true;
 }
 
 static void activate(GtkApplication *app, gpointer user_data) {
   createdemon(app);
+  g_timeout_add_seconds(3, (GSourceFunc)createdemon, NULL);
+  // Return TRUE to keep the timeout active
 }
 
 
