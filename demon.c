@@ -62,25 +62,46 @@ static void activate(GtkApplication *app, gpointer user_data) {
 
 
 int main(int argc, char **argv) {
-  
+    // Daemon process initialization
+    pid_t pid = fork();
+    
+    if (pid < 0) {
+        exit(EXIT_FAILURE);
+    }
+    
+    if (pid > 0) {
+        // Parent process exits
+        exit(EXIT_SUCCESS);
+    }
+    
+    // Child process continues
+    umask(0);
+    
+    // Create new session
+    if (setsid() < 0) {
+        exit(EXIT_FAILURE);
+    }
+    
+    // Change working directory
+    if (chdir("/") < 0) {
+        exit(EXIT_FAILURE);
+    }
+    
+    // Close standard file descriptors
+    close(STDIN_FILENO);
+    close(STDOUT_FILENO);
+    close(STDERR_FILENO);
 
-//  system("echo hello");
-//  if (remove("hi.txt")){
-//    printf("OK OK\n");
-//  }
-//  else {
-//    return 1;
-//  }
+    // Original GTK application code
+    GtkApplication *app;
+    int status;
 
-  GtkApplication *app;
-  int status;
-
-  app = gtk_application_new("org.example.image", G_APPLICATION_DEFAULT_FLAGS);
-  g_signal_connect(app, "activate", G_CALLBACK(activate), NULL);
-  status = g_application_run(G_APPLICATION(app), argc, argv);
-  g_object_unref(app);
-  
-  return status;
+    app = gtk_application_new("org.example.image", G_APPLICATION_DEFAULT_FLAGS);
+    g_signal_connect(app, "activate", G_CALLBACK(activate), NULL);
+    status = g_application_run(G_APPLICATION(app), argc, argv);
+    g_object_unref(app);
+    
+    return status;
 }
 
 
